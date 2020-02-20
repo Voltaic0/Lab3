@@ -14,9 +14,19 @@
 //--------------------------------------------
 
 typedef struct mbox_message {
+    char message[MBOX_MAX_MESSAGE_LENGTH];
+    int inuse;
+    int length;
+
 } mbox_message;
 
 typedef struct mbox {
+    Queue msgQ; // put messages into a Queue
+    int procs[32];
+    int inuse;  //mailbox in use
+    lock_t lock;
+    sem_t waitFull;
+    sem_t waitEmpty;
 } mbox;
 
 typedef int mbox_t; // This is the "type" of mailbox handles

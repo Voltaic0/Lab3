@@ -5,7 +5,8 @@
 #include "queue.h"
 #include "mbox.h"
 
-
+static mbox mboxes[MBOX_NUM_MBOXES];
+static mbox_messages messages[MBOX_NUM_BUFFERS];
 
 //-------------------------------------------------------
 //
@@ -21,6 +22,15 @@
 //-------------------------------------------------------
 
 void MboxModuleInit() {
+    int i;
+
+    for(i=0;i < MBOX_NUM_MBOXES; i++){
+        mboxes[i].inuse = 0;
+    }
+    for(i=0;i < MBOX_NUM_BUFFERS; i++){
+        messages[i].inuse = 0;
+    }
+
 }
 
 //-------------------------------------------------------
@@ -34,7 +44,33 @@ void MboxModuleInit() {
 //
 //-------------------------------------------------------
 mbox_t MboxCreate() {
-  return MBOX_FAIL;
+    int i;
+    mbox_t handle;
+    uint32 intrs;
+
+    intrs = DisableIntrs();
+    for(i=0; i<MBOX_NUM_MBOXES; i++){
+        if(!mboxes[i].inuse){
+            handle = i;
+            mboxes[i].inuse = 1;
+            break;
+        }
+    }
+    RestoreIntrs(intrs);
+
+    if(i == MBOX_NUM_MBOXES){return MBOX_FAIL;}
+
+    if (AQueueInit(&mboxes[handle]->msgQ) != QUEUE_SUCCESS) {
+        printf("FATAL ERROR: could not initialize mbox msgQ in MBOXCreate!\n");
+        exitsim();
+    }
+
+    for( i =0; i<32;i++){
+        mboxes[handle].procs[i] = 0;
+    }
+    mboxes[handle].waitFull = SemCreate(0);
+    mboxes[handle].waitEmpty = SemCreate(0);
+    mboxes[handle].lock = LockCreate();
 }
 
 //-------------------------------------------------------
@@ -52,6 +88,9 @@ mbox_t MboxCreate() {
 //
 //-------------------------------------------------------
 int MboxOpen(mbox_t handle) {
+
+    mboxes[handle].procs[GetCurrentPID()] = 1;
+
   return MBOX_FAIL;
 }
 
@@ -69,7 +108,20 @@ int MboxOpen(mbox_t handle) {
 //
 //-------------------------------------------------------
 int MboxClose(mbox_t handle) {
-  return MBOX_FAIL;
+    int i;
+    if(!mboxes[handle].inuse){
+        return MBOX_FAIL;
+    }
+    mboxes[handle].procs[GetCurrentPID()] = 0;
+
+    for(i = 0 ; i< 32; i++){
+        if(mboxes[handle].procs[i]){
+            return MBOX_SUCCESS;
+        }
+    }
+    mboxes[handle].inuse = 0;
+    return MBOX_SUCCESS;
+
 }
 
 //-------------------------------------------------------
@@ -89,7 +141,47 @@ int MboxClose(mbox_t handle) {
 //
 //-------------------------------------------------------
 int MboxSend(mbox_t handle, int length, void* message) {
-  return MBOX_FAIL;
+    Link *l;
+    int i;
+    for(i=0;i<MBOX_NUM_BUFFERS;i++){
+        if(!message[i].inuse){
+            bcopy(message, messages[i].message, length);
+            message[i].inuse =1;
+            message[i].length = length
+        }
+    }
+    if(length > MBOX_MAX_MESSAGE_LENGTH){return MBOX_FAIL;}
+
+    if(!mboxes[handle].procs[GetCurrentPID()]){return MBOX_FAIL;}
+
+
+    if(mboxes[handle].msgQ.nitems == 10){
+        SemHandleWait(mboxes[handle].waitFull);
+        if ((l = AQueueAllocLink((void *)messages[i])) == NULL) {
+            printf("FATAL ERROR: could not allocate link for MBOXSEND!\n");
+            return MBOX_FAIL;
+        }
+
+        if (AQueueInsertLast (&mboxes[handle].msgQ, l) != QUEUE_SUCCESS) {
+            printf("FATAL ERROR: could not insert new link into lock waiting queue in MBOXLENGTH!\n");
+            return MBOX_FAIL;
+        }
+    }else{
+        if ((l = AQueueAllocLink((void *)messages[i])) == NULL) {
+            printf("FATAL ERROR: could not allocate link for MBOXSEND!\n");
+            return MBOX_FAIL;
+        }
+
+        if (AQueueInsertLast (&mboxes[handle].msgQ, l) != QUEUE_SUCCESS) {
+            printf("FATAL ERROR: could not insert new link into lock waiting queue in MBOXLENGTH!\n");
+            return MBOX_FAIL;
+        }
+        sem_signal(mboxes[handle].waitEmpty);
+    }
+
+    return MBOX_SUCCESS;
+
+
 }
 
 //-------------------------------------------------------
@@ -109,7 +201,28 @@ int MboxSend(mbox_t handle, int length, void* message) {
 //
 //-------------------------------------------------------
 int MboxRecv(mbox_t handle, int maxlength, void* message) {
-  return MBOX_FAIL;
+    Link *l;
+    mbox_message *mess;
+    if(!mboxes[handle].procs[GetCurrentPID()]){return MBOX_FAIL;}
+
+    if(AQueueEmpty(&mboxes[handle].msgQ){
+        SemHandleWait(mboxes[handle].waitEmpty);
+        l = AQueueFirst(&mboxes[handle].msgQ);
+        mess = (mbox_message *)AQueueObject(l);
+        AQueueRemove(l);
+        if(mess->length > maxlength) {
+            return MBOX_FAIL;
+        }
+        }else{
+            l = AQueueFirst(&mboxes[handle].msgQ);
+            mess = (mbox_message *)AQueueObject(l);
+            if(mess->length > maxlength) {
+                return MBOX_FAIL;
+            }
+            bcopy(mess->message, message, mess->length);
+            return mess->length;
+        }
+    }
 }
 
 //--------------------------------------------------------------------------------

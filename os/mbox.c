@@ -6,7 +6,7 @@
 #include "mbox.h"
 
 static mbox mboxes[MBOX_NUM_MBOXES];
-static mbox_messages messages[MBOX_NUM_BUFFERS];
+static mbox_message messages[MBOX_NUM_BUFFERS];
 
 //-------------------------------------------------------
 //
@@ -60,7 +60,7 @@ mbox_t MboxCreate() {
 
     if(i == MBOX_NUM_MBOXES){return MBOX_FAIL;}
 
-    if (AQueueInit(&mboxes[handle]->msgQ) != QUEUE_SUCCESS) {
+    if (AQueueInit(&mboxes[handle].msgQ) != QUEUE_SUCCESS) {
         printf("FATAL ERROR: could not initialize mbox msgQ in MBOXCreate!\n");
         exitsim();
     }
@@ -71,6 +71,8 @@ mbox_t MboxCreate() {
     mboxes[handle].waitFull = SemCreate(0);
     mboxes[handle].waitEmpty = SemCreate(0);
     mboxes[handle].lock = LockCreate();
+
+    return handle;
 }
 
 //-------------------------------------------------------
@@ -89,9 +91,12 @@ mbox_t MboxCreate() {
 //-------------------------------------------------------
 int MboxOpen(mbox_t handle) {
 
-    mboxes[handle].procs[GetCurrentPID()] = 1;
+    if(handle < 0 || handle > MBOX_NUM_MBOXES || !mboxes[handle].inuse){return MBOX_FAIL;}
 
-  return MBOX_FAIL;
+    mboxes[handle].procs[GetCurrentPid()] = 1;
+
+
+  return MBOX_SUCCESS;
 }
 
 //-------------------------------------------------------
@@ -109,17 +114,28 @@ int MboxOpen(mbox_t handle) {
 //-------------------------------------------------------
 int MboxClose(mbox_t handle) {
     int i;
+    Link *l;
+    mbox_message *mess;
     if(!mboxes[handle].inuse){
         return MBOX_FAIL;
     }
-    mboxes[handle].procs[GetCurrentPID()] = 0;
+    mboxes[handle].procs[GetCurrentPid()] = 0;
 
     for(i = 0 ; i< 32; i++){
         if(mboxes[handle].procs[i]){
             return MBOX_SUCCESS;
         }
     }
+    LockHandleAcquire(mboxes[handle].lock);
+    while(!AQueueEmpty(&mboxes[handle].msgQ)){
+        l = AQueueFirst(&mboxes[handle].msgQ);
+        mess = (mbox_message *)AQueueObject(l);
+        mess->inuse = 0;
+        AQueueRemove(&l);
+    }
     mboxes[handle].inuse = 0;
+    LockHandleRelease(mboxes[handle].lock);
+
     return MBOX_SUCCESS;
 
 }
@@ -144,20 +160,22 @@ int MboxSend(mbox_t handle, int length, void* message) {
     Link *l;
     int i;
     for(i=0;i<MBOX_NUM_BUFFERS;i++){
-        if(!message[i].inuse){
+        if(!messages[i].inuse){
             bcopy(message, messages[i].message, length);
-            message[i].inuse =1;
-            message[i].length = length
+            messages[i].inuse =1;
+            messages[i].length = length;
+            break;
         }
     }
+    if(i == MBOX_NUM_BUFFERS){return MBOX_FAIL;}
     if(length > MBOX_MAX_MESSAGE_LENGTH){return MBOX_FAIL;}
 
-    if(!mboxes[handle].procs[GetCurrentPID()]){return MBOX_FAIL;}
+    if(!mboxes[handle].procs[GetCurrentPid()]){return MBOX_FAIL;}
 
 
-    if(mboxes[handle].msgQ.nitems == 10){
+    if(AQueueLength(&mboxes[handle].msgQ)== 10){
         SemHandleWait(mboxes[handle].waitFull);
-        if ((l = AQueueAllocLink((void *)messages[i])) == NULL) {
+        if ((l = AQueueAllocLink((void *)&messages[i])) == NULL) {
             printf("FATAL ERROR: could not allocate link for MBOXSEND!\n");
             return MBOX_FAIL;
         }
@@ -167,7 +185,7 @@ int MboxSend(mbox_t handle, int length, void* message) {
             return MBOX_FAIL;
         }
     }else{
-        if ((l = AQueueAllocLink((void *)messages[i])) == NULL) {
+        if ((l = AQueueAllocLink((void *)&messages[i])) == NULL) {
             printf("FATAL ERROR: could not allocate link for MBOXSEND!\n");
             return MBOX_FAIL;
         }
@@ -176,7 +194,7 @@ int MboxSend(mbox_t handle, int length, void* message) {
             printf("FATAL ERROR: could not insert new link into lock waiting queue in MBOXLENGTH!\n");
             return MBOX_FAIL;
         }
-        sem_signal(mboxes[handle].waitEmpty);
+        SemHandleSignal(mboxes[handle].waitEmpty);
     }
 
     return MBOX_SUCCESS;
@@ -203,27 +221,34 @@ int MboxSend(mbox_t handle, int length, void* message) {
 int MboxRecv(mbox_t handle, int maxlength, void* message) {
     Link *l;
     mbox_message *mess;
-    if(!mboxes[handle].procs[GetCurrentPID()]){return MBOX_FAIL;}
+    if(!mboxes[handle].procs[GetCurrentPid()]){return MBOX_FAIL;}
 
-    if(AQueueEmpty(&mboxes[handle].msgQ){
+    if(AQueueEmpty(&mboxes[handle].msgQ)){
         SemHandleWait(mboxes[handle].waitEmpty);
+        LockHandleAcquire(mboxes[handle].lock);
         l = AQueueFirst(&mboxes[handle].msgQ);
         mess = (mbox_message *)AQueueObject(l);
-        AQueueRemove(l);
+        AQueueRemove(&l);
+        mess->inuse = 0;
+        LockHandleRelease(mboxes[handle].lock);
         if(mess->length > maxlength) {
             return MBOX_FAIL;
         }
-        }else{
-            l = AQueueFirst(&mboxes[handle].msgQ);
-            mess = (mbox_message *)AQueueObject(l);
-            if(mess->length > maxlength) {
-                return MBOX_FAIL;
-            }
-            bcopy(mess->message, message, mess->length);
-            return mess->length;
-        }
+        bcopy(mess->message, message, mess->length);
+
     }
+    else{
+        l = AQueueFirst(&mboxes[handle].msgQ);
+        mess = (mbox_message *)AQueueObject(l);
+        if(mess->length > maxlength) {
+            return MBOX_FAIL;
+        }
+        bcopy(mess->message, message, mess->length);
+        SemHandleSignal(mboxes[handle].waitFull);
+    }
+    return mess->length;
 }
+
 
 //--------------------------------------------------------------------------------
 // 
@@ -238,5 +263,12 @@ int MboxRecv(mbox_t handle, int maxlength, void* message) {
 //
 //--------------------------------------------------------------------------------
 int MboxCloseAllByPid(int pid) {
+    int i;
+    for(i = 0; i <MBOX_NUM_MBOXES; i++){
+        if(mboxes[i].inuse){
+            mboxes[i].procs[pid] = 0;
+        }
+    }
+
   return MBOX_FAIL;
 }

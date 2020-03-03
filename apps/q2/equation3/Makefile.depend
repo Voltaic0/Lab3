@@ -1,0 +1,2 @@
+work/equation3.o: equation3.c ../../../include/usertraps.h \
+ ../../../include/misc.h

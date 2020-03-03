@@ -1,0 +1,2 @@
+work/s2inject.o: s2inject.c ../../../include/usertraps.h \
+ ../../../include/misc.h

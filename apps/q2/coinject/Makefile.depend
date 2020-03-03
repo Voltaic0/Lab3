@@ -1,0 +1,2 @@
+work/coinject.o: coinject.c ../../../include/usertraps.h \
+ ../../../include/misc.h

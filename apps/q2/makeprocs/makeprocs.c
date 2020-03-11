@@ -81,9 +81,9 @@ void main (int argc, char *argv[])
     ditoa(carbon_two, carbon_two_str);
 
 
-    for(i=0; i< 10; i++){
+    for(i=0; i< 15; i++){
         if(i< sulfur2){
-            process_create(FILENAME_TO_RUN, 0, 0, s_procs_completed_str, sulfur_two_str, NULL); // pro
+            process_create(FILENAME_TO_RUN, 0, 1, s_procs_completed_str, sulfur_two_str, NULL); // pro
         }
         if(i<carbon_o){
             process_create(FILENAME_TO_RUN2, 0, 0, s_procs_completed_str, carbon_oxy_str, NULL); // pro

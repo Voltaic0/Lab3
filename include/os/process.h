@@ -29,6 +29,7 @@
 #define	PROCESS_STATUS_MASK	0x3f
 #define	PROCESS_TYPE_SYSTEM	0x100
 #define	PROCESS_TYPE_USER	0x200
+#define PROCESS_TYPE_WAKE   0x45
 
 typedef	void (*VoidFunc)();
 
@@ -45,6 +46,15 @@ typedef struct PCB {
 
   int           pinfo;          // Turns on printing of runtime stats
   int           pnice;          // Used in priority calculation
+
+  int   numJiffies; // Number of Jiffies when Process began on CPU
+  int runTime;
+  int sleepStart;
+
+  int decayed;
+
+  int priority;
+  double estCPU;
 } PCB;
 
 // Offsets of various registers from the stack pointer in the register
@@ -74,6 +84,9 @@ typedef struct PCB {
 // Use this format string for printing CPU stats
 #define PROCESS_CPUSTATS_FORMAT "CPUStats: Process %d has run for %d jiffies, prio = %d\n"
 
+#define BASE_PRIORITY 50
+#define PRIORITIES_PER_QUEUE 4
+
 extern PCB	*currentPCB;
 
 int ProcessFork (VoidFunc func, uint32 param, int pnice, int pinfo,char *name, int isUser);
@@ -90,5 +103,7 @@ int GetPidFromAddress(PCB *pcb);
 
 void ProcessUserSleep(int seconds);
 void ProcessYield();
+extern void ProcessRecalcPriority(PCB *);
+extern void ProcessDecayAllEstcpus();
 
 #endif	/* __process_h__ */

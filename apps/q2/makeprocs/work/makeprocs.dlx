@@ -1,7 +1,7 @@
 ; Linked by DLX-LD.
 ; MemSize 24576
 ; Data size: 472
-; Text size: 5824
+; Text size: 5832
 ; Stack size: 8192
 .text 0x1000
 .data 0x3000
@@ -378,9 +378,11 @@ L27_LF0:
 	sw	(r29),r20
 	addi	r20,r0,#0
 	sw	4(r29),r20
+	addi	r20,r0,#1
 	sw	8(r29),r20
 	sw	12(r29),r6
 	sw	16(r29),r5
+	addi	r20,r0,#0
 	sw	20(r29),r20
 	jal	_process_create
 	nop; not filled.
@@ -458,7 +460,7 @@ L31_LF0:
 	addi	r29,r29,#32
 L26_LF0:
 	addi	r7,r7,#1
-	slei	r1,r7,#9
+	slei	r1,r7,#14
 	bnez	r1,L27_LF0
 	nop; not filled.
 	addi	r29,r29,#-8

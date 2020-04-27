@@ -95,6 +95,7 @@ void ProcessModuleInit () {
   // There are no processes running at this point, so currentPCB=NULL
   currentPCB = NULL;
   dbprintf ('p', "ProcessModuleInit: function complete\n");
+  Printf("ProcessModuleInit complete\n");
 }
 
 //----------------------------------------------------------------------
@@ -122,6 +123,7 @@ void ProcessFreeResources (PCB *pcb) {
   int npages = 0;
 
   dbprintf ('p', "ProcessFreeResources: function started\n");
+  Printf("in ProcessFreeResources\n");
 
 
   //-----------------------------------------------------
@@ -493,6 +495,7 @@ int ProcessFork (VoidFunc func, uint32 param, int pnice, int pinfo,char *name, i
   int queue_number = 50 / PRIORITIES_PER_QUEUE;
 
   dbprintf ('p', "ProcessFork (%d): function started\n", GetCurrentPid());
+  Printf("Forking \n");
   intrs = DisableIntrs ();
   dbprintf ('I', "Old interrupt value was 0x%x.\n", intrs);
   dbprintf ('p', "Entering ProcessFork args=0x%x 0x%x %s %d\n", (int)func,

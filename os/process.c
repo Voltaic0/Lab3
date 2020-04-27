@@ -95,7 +95,7 @@ void ProcessModuleInit () {
   // There are no processes running at this point, so currentPCB=NULL
   currentPCB = NULL;
   dbprintf ('p', "ProcessModuleInit: function complete\n");
-  printf("ProcessModuleInit complete\n");
+  //printf("ProcessModuleInit complete\n");
 }
 
 //----------------------------------------------------------------------
@@ -232,6 +232,8 @@ void ProcessSchedule () {
 
   dbprintf ('p', "Now entering ProcessSchedule (cur=0x%x, %d ready)\n",
 	    (int)currentPCB, AQueueLength (&runQueue[queue_place]));
+  printf ("Now entering ProcessSchedule (cur=0x%x, %d ready)\n",
+	    (int)currentPCB, AQueueLength (&runQueue[queue_place]));
   // The OS exits if there's no runnable process.  This is a feature, not a
   // bug.  An easy solution to allowing no runnable "user" processes is to
   // have an "idle" process that's simply an infinite loop.
@@ -255,6 +257,7 @@ void ProcessSchedule () {
   ProcessRecalcPriority(currentPCB);
 
   AQueueMoveAfter(&runQueue[queue_place], AQueueLast(&runQueue[queue_place]), AQueueFirst(&runQueue[queue_place]));
+  printf("AQueueMove processSchedule\n");
   //Print process info
   if(currentPCB->pinfo == 1){
       printf(PROCESS_CPUSTATS_FORMAT, GetCurrentPid(), ClkGetCurJiffies() - currentPCB->numJiffies, 0);
@@ -282,6 +285,7 @@ void ProcessSchedule () {
   while (!AQueueEmpty(&zombieQueue)) {
     pcb = (PCB *)AQueueObject(AQueueFirst(&zombieQueue));
     dbprintf ('p', "Freeing zombie PCB 0x%x.\n", (int)pcb);
+    printf ("Freeing zombie PCB 0x%x.\n", (int)pcb);
     if (AQueueRemove(&(pcb->l)) != QUEUE_SUCCESS) {
       printf("FATAL ERROR: could not remove zombie process from zombieQueue in ProcessSchedule!\n");
       exitsim();
@@ -495,7 +499,7 @@ int ProcessFork (VoidFunc func, uint32 param, int pnice, int pinfo,char *name, i
   int queue_number = 50 / PRIORITIES_PER_QUEUE;
 
   dbprintf ('p', "ProcessFork (%d): function started\n", GetCurrentPid());
-  printf("Forking \n");
+  //printf("Forking \n");
   intrs = DisableIntrs ();
   dbprintf ('I', "Old interrupt value was 0x%x.\n", intrs);
   dbprintf ('p', "Entering ProcessFork args=0x%x 0x%x %s %d\n", (int)func,

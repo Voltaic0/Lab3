@@ -7,7 +7,7 @@ void main (int argc, char *argv[])
     sem_t s_procs_completed; // Semaphore to signal the original process that we're done
     mbox_t s_send;
     mbox_t s2_rec;
-    int i;
+    //int i;
     char recieve[2];
     char send[2];
 
@@ -17,7 +17,7 @@ void main (int argc, char *argv[])
         Printf("Usage: "); Printf(argv[0]); Printf(" <handle_to_shared_memory_page> <handle_to_page_mapped_semaphore>\n");
         Exit();
     }
-    send[0] = "S";
+    send[0] = 'S';
     // Convert the command-line strings into integers for use as handles
     s_procs_completed = dstrtol(argv[1], NULL, 10);
     s2_rec = dstrtol(argv[2], NULL, 10);

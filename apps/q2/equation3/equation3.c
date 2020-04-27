@@ -7,7 +7,7 @@ void main (int argc, char *argv[])
     sem_t s_procs_completed; // Semaphore to signal the original process that we're done
     mbox_t o2_rec;
     mbox_t s_rec;
-    int i;
+    //int i;
     char *recieve = "S";
     char *rec = "2 O2";
 

@@ -258,7 +258,7 @@ void ProcessSchedule () {
   times++;
   if(times == 10){
       times = 0;
-      ProcessDecayAll
+      ProcessDecayAll();
   }
 
 
@@ -294,16 +294,17 @@ void DecayAllEstcpus(){
     int toRun;
     PCB *pcb;
     Link *l;
+    int len;
     int location;
-    for(i=0; i < 32) {
-        len = AQueueLength(runQueue[i]);
+    for(i=0; i < 32; i++) {
+        len = AQueueLength(&runQueue[i]);
         for (j = 0; j < len; j++) {
             l = AQueueFirst(&runQueue[i]);
             pcb = (PCB *) AQueueObject(l);
             if (pcb->decayed == 0) {
                 pcb->estCPU = (pcb->estCPU * (2.0 / 3.0)) + pcb->pnice;
                 ProcessRecalcPriority(pcb);
-                decayed = 1;
+                pcb->decayed = 1;
             }
             AQueueRemove(&pcb->l);
 
@@ -312,7 +313,7 @@ void DecayAllEstcpus(){
             AQueueInsertLast(&runQueue[location], pcb->l);
         }
     }
-    for(i=0, i < 32; i++){
+    for(i=0; i < 32; i++){
         l = AQueueFirst(&runQueue[i]);
         while(l != NULL){
             pcb = (PCB*)AQueueObject(l);
@@ -343,10 +344,10 @@ inline int WhichQueue(PCB *pcb){
 void ProcessDecayEstcpuSleep(PCB *pcb, int time_asleep_jiffies){
     int num_windows_asleep;
     int i;
-    if(time_asleep_jiffies >= 10*PROCESS_QUANTUM_JIFFFIES){
+    if(time_asleep_jiffies >= 10 * PROCESS_QUANTUM_JIFFIES){
         num_windows_asleep = time_asleep_jiffies / (0.01*10);
         for(i = 0; i < num_windows_asleep; i++){
-            pcb->estCPU = pcb->estCPU * (2.0 / 3.0)
+            pcb->estCPU = pcb->estCPU * (2.0 / 3.0);
         }
     }
 }

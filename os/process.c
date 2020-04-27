@@ -231,7 +231,7 @@ void ProcessSchedule () {
   queue_place = WhichQueue(currentPCB);
 
   dbprintf ('p', "Now entering ProcessSchedule (cur=0x%x, %d ready)\n",
-	    (int)currentPCB, AQueueLength (&runQueue[queue_place]));
+	    (int)currentPCB, AQueueLength(&runQueue[queue_place]));
   //printf ("Now entering ProcessSchedule (cur=0x%x, %d ready)\n",
 	//    (int)currentPCB, AQueueLength (&runQueue[queue_place]));
   // The OS exits if there's no runnable process.  This is a feature, not a
@@ -241,6 +241,7 @@ void ProcessSchedule () {
   for(i = 0; i < 32; i++){
       if(!AQueueEmpty(&runQueue[i])){
           break;
+          printf("Empty Queue\n");
       }
   }
   if(i == 32){

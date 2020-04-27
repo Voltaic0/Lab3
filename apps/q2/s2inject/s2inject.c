@@ -7,6 +7,7 @@ void main (int argc, char *argv[])
   sem_t s_procs_completed; // Semaphore to signal the original process that we're done
   mbox_t s2_send;
   char *inject = "S2";
+  Printf("Entering s2inject\n");
 
   //lock_t TheLock;
 
@@ -24,6 +25,7 @@ void main (int argc, char *argv[])
         Printf("Error Opening sulfur_two mailbox.\n");
         Exit();
     }
+    Printf("About to inject\n");
     mbox_send(s2_send, 3, inject);
     Printf("S2 Injected!\n");
 

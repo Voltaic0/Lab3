@@ -52,8 +52,11 @@ int ProcessGetCodeInfo(const char *file, uint32 *startAddr, uint32 *codeStart, u
 int ProcessGetFromFile(int fd, unsigned char *buf, uint32 *addr, int max);
 uint32 get_argument(char *string);
 
+//helper function
+inline int WhichQueue(PCB *pcb){
+    return pcb->priority / PRIORITIES_PER_QUEUE;
+}
 
-
 //----------------------------------------------------------------------
 //
 //	ProcessModuleInit
@@ -241,7 +244,7 @@ void ProcessSchedule () {
           printf("NO Runnable Processes, FATAL ERROR!\n");
       }
       printf("No Runnable Processes!\n");
-      existim();
+      exitsim();
   }
 
   // Move the front of the queue to the end.  The running process was the one in front.
@@ -258,7 +261,7 @@ void ProcessSchedule () {
   times++;
   if(times == 10){
       times = 0;
-      ProcessDecayAll();
+      ProcessDecayAllEstcpus();
   }
 
 
@@ -288,7 +291,7 @@ void ProcessSchedule () {
 
 
 //USER GENERATED HELPER FUNCTIONS
-void DecayAllEstcpus(){
+void ProcessDecayAllEstcpus(){
     int i;
     int j;
     int toRun;
@@ -335,10 +338,6 @@ void ProcessRecalcPriority(PCB *pcb){
         pcb->priority = 127;
     }
 
-}
-
-inline int WhichQueue(PCB *pcb){
-    return pcb->priority / PRIORITIES_PER_QUEUE;
 }
 
 void ProcessDecayEstcpuSleep(PCB *pcb, int time_asleep_jiffies){

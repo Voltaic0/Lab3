@@ -232,8 +232,8 @@ void ProcessSchedule () {
 
   dbprintf ('p', "Now entering ProcessSchedule (cur=0x%x, %d ready)\n",
 	    (int)currentPCB, AQueueLength (&runQueue[queue_place]));
-  printf ("Now entering ProcessSchedule (cur=0x%x, %d ready)\n",
-	    (int)currentPCB, AQueueLength (&runQueue[queue_place]));
+  //printf ("Now entering ProcessSchedule (cur=0x%x, %d ready)\n",
+	//    (int)currentPCB, AQueueLength (&runQueue[queue_place]));
   // The OS exits if there's no runnable process.  This is a feature, not a
   // bug.  An easy solution to allowing no runnable "user" processes is to
   // have an "idle" process that's simply an infinite loop.
@@ -257,7 +257,7 @@ void ProcessSchedule () {
   ProcessRecalcPriority(currentPCB);
 
   AQueueMoveAfter(&runQueue[queue_place], AQueueLast(&runQueue[queue_place]), AQueueFirst(&runQueue[queue_place]));
-  printf("AQueueMove processSchedule\n");
+  //printf("AQueueMove processSchedule\n");
   //Print process info
   if(currentPCB->pinfo == 1){
       printf(PROCESS_CPUSTATS_FORMAT, GetCurrentPid(), ClkGetCurJiffies() - currentPCB->numJiffies, 0);
@@ -278,9 +278,6 @@ void ProcessSchedule () {
   dbprintf ('p',"About to switch to PCB 0x%x,flags=0x%x @ 0x%x\n",
 	    (int)pcb, pcb->flags, (int)(pcb->sysStackPtr[PROCESS_STACK_IAR]));
 
-  printf ("About to switch to PCB 0x%x,flags=0x%x @ 0x%x\n",
-	    (int)pcb, pcb->flags, (int)(pcb->sysStackPtr[PROCESS_STACK_IAR]));
-
   currentPCB->numJiffies = ClkGetCurJiffies();
 
   // Clean up zombie processes here.  This is done at interrupt time
@@ -288,7 +285,7 @@ void ProcessSchedule () {
   while (!AQueueEmpty(&zombieQueue)) {
     pcb = (PCB *)AQueueObject(AQueueFirst(&zombieQueue));
     dbprintf ('p', "Freeing zombie PCB 0x%x.\n", (int)pcb);
-    printf ("Freeing zombie PCB 0x%x.\n", (int)pcb);
+    //printf ("Freeing zombie PCB 0x%x.\n", (int)pcb);
     if (AQueueRemove(&(pcb->l)) != QUEUE_SUCCESS) {
       printf("FATAL ERROR: could not remove zombie process from zombieQueue in ProcessSchedule!\n");
       exitsim();
@@ -296,7 +293,7 @@ void ProcessSchedule () {
     ProcessFreeResources(pcb);
   }
   dbprintf ('p', "Leaving ProcessSchedule (cur=0x%x)\n", (int)currentPCB);
-  printf ("Leaving ProcessSchedule (cur=0x%x)\n", (int)currentPCB);
+  //printf ("Leaving ProcessSchedule (cur=0x%x)\n", (int)currentPCB);
 }
 
 

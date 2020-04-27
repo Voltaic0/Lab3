@@ -278,6 +278,9 @@ void ProcessSchedule () {
   dbprintf ('p',"About to switch to PCB 0x%x,flags=0x%x @ 0x%x\n",
 	    (int)pcb, pcb->flags, (int)(pcb->sysStackPtr[PROCESS_STACK_IAR]));
 
+  printf ("About to switch to PCB 0x%x,flags=0x%x @ 0x%x\n",
+	    (int)pcb, pcb->flags, (int)(pcb->sysStackPtr[PROCESS_STACK_IAR]));
+
   currentPCB->numJiffies = ClkGetCurJiffies();
 
   // Clean up zombie processes here.  This is done at interrupt time
@@ -293,6 +296,7 @@ void ProcessSchedule () {
     ProcessFreeResources(pcb);
   }
   dbprintf ('p', "Leaving ProcessSchedule (cur=0x%x)\n", (int)currentPCB);
+  printf ("Leaving ProcessSchedule (cur=0x%x)\n", (int)currentPCB);
 }
 
 

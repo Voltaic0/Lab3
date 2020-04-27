@@ -207,9 +207,9 @@ void ProcessSetResult (PCB * pcb, uint32 result) {
 void ProcessSchedule () {
   PCB *pcb=NULL;
   int i=0;
-  Link *l=NULL;
+  //Link *l=NULL;
   int queue_place;
-  int autoWake = 1;
+  //int autoWake = 1;
 
 //  if(AQueueEmpty(&waitQueue)){
 //      autoWake = 0;
@@ -294,7 +294,7 @@ void ProcessSchedule () {
 void ProcessDecayAllEstcpus(){
     int i;
     int j;
-    int toRun;
+    //int toRun;
     PCB *pcb;
     Link *l;
     int len;
@@ -328,8 +328,8 @@ void ProcessDecayAllEstcpus(){
 }
 
 void ProcessRecalcPriority(PCB *pcb){
-    int totalJiffies = 0;
-    int i;
+    //int totalJiffies = 0;
+    //int i;
 
     if(ClkGetCurJiffies() - pcb->numJiffies >= PROCESS_QUANTUM_JIFFIES){pcb->estCPU++;}
     pcb->priority = BASE_PRIORITY + pcb->estCPU / 4 + 2* pcb->pnice;
@@ -399,7 +399,7 @@ void ProcessSuspend (PCB *suspend) {
 void ProcessWakeup (PCB *wakeup) {
     int location;
     ProcessRecalcPriority(wakeup);
-    ProcessDecayEstcpuSleep(wakeup, ClkGetCurJiffies - wakeup->sleepStart);
+    ProcessDecayEstcpuSleep(wakeup, ClkGetCurJiffies() - wakeup->sleepStart);
   dbprintf ('p',"Waking up PID %d.\n", (int)(wakeup - pcbs));
   // Make sure it's not yet a runnable process.
   ASSERT (wakeup->flags & PROCESS_STATUS_WAITING, "Trying to wake up a non-sleeping process!\n");

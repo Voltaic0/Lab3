@@ -244,6 +244,7 @@ void ProcessSchedule () {
           printf("Empty Queue\n");
       }
   }
+  printf("finished that loop\n");
   if(i == 32){
       if(AQueueLength(&waitQueue)) {
           printf("NO Runnable Processes, FATAL ERROR!\n");

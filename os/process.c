@@ -296,7 +296,7 @@ void ProcessSchedule () {
       AQueueInsertLast(&runQueue[queue_place], currentPCB->l);
  
   }
-  ProcessPrintRunQueues();
+  //ProcessPrintRunQueues();
   times++;
 
   if(times == 10){

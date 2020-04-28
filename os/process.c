@@ -485,8 +485,7 @@ void ProcessSuspend (PCB *suspend) {
 //----------------------------------------------------------------------
 void ProcessWakeup (PCB *wakeup) {
     int location;
-    ProcessRecalcPriority(wakeup);
-    ProcessDecayEstcpuSleep(wakeup, ClkGetCurJiffies() - wakeup->sleepStart);
+    
   dbprintf ('p',"Waking up PID %d.\n", (int)(wakeup - pcbs));
   // Make sure it's not yet a runnable process.
   ASSERT (wakeup->flags & PROCESS_STATUS_WAITING, "Trying to wake up a non-sleeping process!\n");
@@ -499,6 +498,7 @@ void ProcessWakeup (PCB *wakeup) {
     printf("FATAL ERROR: could not get link for wakeup PCB in ProcessWakeup!\n");
     exitsim();
   }
+  ProcessDecayEstcpuSleep(wakeup, ClkGetCurJiffies() - wakeup->sleepStart);
   location = WhichQueue(wakeup);
   if (AQueueInsertLast(&runQueue[location], wakeup->l) != QUEUE_SUCCESS) {
     printf("FATAL ERROR: could not insert link into runQueue in ProcessWakeup!\n");

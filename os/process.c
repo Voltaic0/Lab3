@@ -240,9 +240,9 @@ void ProcessSchedule () {
   // have an "idle" process that's simply an infinite loop.
 
   for(i = 0; i < 32; i++){
-    printf("i = %d\n", i);
       if(!AQueueEmpty(&runQueue[i])){
           break;
+          printf("printing?\n");
           printf("Empty Queue\n");
       }
   }

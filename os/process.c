@@ -265,7 +265,7 @@ void ProcessSchedule () {
           break;
       }
   }
-  printf("i = %d\n", i);
+  //printf("i = %d\n", i);
   
   //printf("finished that loop\n");
   if(currentlyRun && autoWake){

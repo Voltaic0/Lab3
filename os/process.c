@@ -577,7 +577,6 @@ int ProcessFork (VoidFunc func, uint32 param, int pnice, int pinfo,char *name, i
   unsigned char buf[100];
   uint32 dum[MAX_ARGS+8], count, offset;
   char *str;
-  int queue_number = 50 / PRIORITIES_PER_QUEUE;
 
   dbprintf ('p', "ProcessFork (%d): function started\n", GetCurrentPid());
   //printf("Forking \n");
@@ -630,14 +629,7 @@ int ProcessFork (VoidFunc func, uint32 param, int pnice, int pinfo,char *name, i
     exitsim ();	// NEVER RETURNS!
   }
   pcb->sysStackArea = newPage * MEMORY_PAGE_SIZE;
-  //setting Pnice Pinfo of PJiffies
-  pcb->pnice = pnice;
-  pcb->pinfo = pinfo;
-  pcb->numJiffies = ClkGetCurJiffies();
-  pcb->runTime = 0;
-  pcb->sleepStart = 0;
-  pcb->estCPU = 0;
-  pcb->decayed = 0;
+  
   //----------------------------------------------------------------------
   // Stacks grow down from the top.  The current system stack pointer has
   // to be set to the bottom of the interrupt stack frame, which is at the
@@ -757,14 +749,25 @@ int ProcessFork (VoidFunc func, uint32 param, int pnice, int pinfo,char *name, i
     // Mark this as a system process.
     pcb->flags |= PROCESS_TYPE_SYSTEM;
   }
-
+  //setting Pnice Pinfo of PJiffies
+  pcb->pnice = pnice;
+  pcb->pinfo = pinfo;
+  pcb->runTime = 0;
+  if(func == ProcessIdle){
+      pcb->priority = 127;
+  }else{
+      pcb->priority = BASE_PRIORITY;
+  }
+  pcb->sleepStart = 0;
+  pcb->estCPU = 0;
+  pcb->decayed = 0;
   // Place PCB onto run queue
   intrs = DisableIntrs ();
   if ((pcb->l = AQueueAllocLink(pcb)) == NULL) {
     printf("FATAL ERROR: could not get link for forked PCB in ProcessFork!\n");
     exitsim();
   }
-  if (AQueueInsertLast(&runQueue[queue_number], pcb->l) != QUEUE_SUCCESS) {
+  if (AQueueInsertLast(&runQueue[WhichQueue(pcb)], pcb->l) != QUEUE_SUCCESS) {
     printf("FATAL ERROR: could not insert link into runQueue in ProcessFork!\n");
     exitsim();
   }

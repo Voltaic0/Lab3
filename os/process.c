@@ -335,7 +335,7 @@ void ProcessSchedule () {
     ProcessFreeResources(pcb);
   }
   dbprintf ('p', "Leaving ProcessSchedule (cur=0x%x)\n", (int)currentPCB);
-  printf ("Leaving ProcessSchedule (cur=0x%x)\n", (int)currentPCB);
+  //printf ("Leaving ProcessSchedule (cur=0x%x)\n", (int)currentPCB);
 }
 
 

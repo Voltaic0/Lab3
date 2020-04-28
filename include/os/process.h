@@ -107,5 +107,6 @@ void ProcessUserSleep(int seconds);
 void ProcessYield();
 extern void ProcessRecalcPriority(PCB *);
 extern void ProcessDecayAllEstcpus();
+extern void ProcessPrintRunQueues();
 
 #endif	/* __process_h__ */

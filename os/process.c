@@ -296,7 +296,7 @@ void ProcessSchedule () {
       AQueueInsertLast(&runQueue[queue_place], currentPCB->l);
  
   }
-  
+  ProcessPrintRunQueues();
   times++;
 
   if(times == 10){
@@ -340,6 +340,23 @@ void ProcessSchedule () {
 
 
 //USER GENERATED HELPER FUNCTIONS
+void ProcessPrintRunQueues(){
+    PCB *pcb;
+    Link *l;
+    int i;
+
+    for(i = 0; i<32; i++){
+     l = AQueueFirst(&runQueue[i]);
+     if(l != NULL){
+      printf("runQueue: %d\n", i);
+	 }
+
+     while(l != NULL){
+      pcb = (PCB*)AQueueObject(l);
+      printf("Name: %s, estCPU: %f\n", pcb->name, pcb->estCPU);
+	 }
+	}
+}
 PCB *ProcessFindHighestPriorityPCB(){
     PCB *pcb;
     int i;

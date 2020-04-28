@@ -234,6 +234,7 @@ void ProcessSchedule () {
 	    (int)currentPCB, AQueueLength(&runQueue[queue_place]));
   //printf ("Now entering ProcessSchedule (cur=0x%x, %d ready)\n",
 	//    (int)currentPCB, AQueueLength (&runQueue[queue_place]));
+  
   // The OS exits if there's no runnable process.  This is a feature, not a
   // bug.  An easy solution to allowing no runnable "user" processes is to
   // have an "idle" process that's simply an infinite loop.
@@ -244,7 +245,9 @@ void ProcessSchedule () {
           printf("Empty Queue\n");
       }
   }
-  printf("finished that loop\n");
+  printf("i = %d\n", i);
+  
+  //printf("finished that loop\n");
   if(i == 32){
       if(AQueueLength(&waitQueue)) {
           printf("NO Runnable Processes, FATAL ERROR!\n");

@@ -753,11 +753,9 @@ int ProcessFork (VoidFunc func, uint32 param, int pnice, int pinfo,char *name, i
   pcb->pnice = pnice;
   pcb->pinfo = pinfo;
   pcb->runTime = 0;
-  if(func == ProcessIdle){
-      pcb->priority = 127;
-  }else{
-      pcb->priority = BASE_PRIORITY;
-  }
+  
+  pcb->priority = BASE_PRIORITY;
+  
   pcb->sleepStart = 0;
   pcb->estCPU = 0;
   pcb->decayed = 0;

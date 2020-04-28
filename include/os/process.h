@@ -30,6 +30,7 @@
 #define	PROCESS_TYPE_SYSTEM	0x100
 #define	PROCESS_TYPE_USER	0x200
 #define PROCESS_TYPE_WAKE   0x45
+#define PROCESS_STATUS_YIELD 0x20
 
 typedef	void (*VoidFunc)();
 
@@ -50,6 +51,7 @@ typedef struct PCB {
   int   numJiffies; // Number of Jiffies when Process began on CPU
   int runTime;      //How long the Process has run on pcb so far
   int sleepStart;   //Start time of Jiffie run
+  int wakeTime;
 
   int decayed;      //decay flag
 

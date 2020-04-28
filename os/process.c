@@ -216,19 +216,6 @@ void ProcessSchedule () {
   int autoWake = 1;
   int currentlyRun = 1;
 
-//  if(AQueueEmpty(&waitQueue)){
-//      autoWake = 0;
-//  }else{
-//      l = AQueueFirst(&waitQueue);
-//      while( l != NULL){
-//          pcb = AQueueObject(l);
-//          if(pcb->flags & PROCESS_TYPE_WAKE){
-//              autoWake = 0;
-//              if(pcb->wa)
-//          }
-//      }
-//  }
-
 
 
   queue_place = WhichQueue(currentPCB);
@@ -246,16 +233,22 @@ void ProcessSchedule () {
   l = AQueueFirst(&waitQueue);
 
   //Cheching for auto waking processes used in Q5
-  /*while(l != NULL){
+  while(l != NULL){
     pcb = AQueueObject(&waitQueue);
     l= AQueueNext(l);
 
     if(pcb->flags & PROCESS_TYPE_WAKE){
         autoWake = 0;
-        if(pcb->)
+        if(pcb->wakeTime <= ClkGetCurJiffies()){
+            ProcessWakeup(pcb);  
+		}
+            ProcessWakeup(pcb);  
+		}
+            ProcessWakeup(pcb);  
+		}
 	}
   }
-  */
+  
   for(i = 0; i < 32; i++){
       if(!AQueueEmpty(&runQueue[i])){
           currentlyRun = 0;
@@ -286,8 +279,17 @@ void ProcessSchedule () {
       printf(PROCESS_CPUSTATS_FORMAT, GetCurrentPid(), currentPCB->runTime, currentPCB->priority);
   }
 
-  if(currentPCB->flags & PROCESS_STATUS_RUNNABLE){
+  if(currentPCB->flags & (PROCESS_STATUS_RUNNABLE | PROCESS_STATUS_YIELD)){
       AQueueRemove(&(currentPCB->l));
+
+      if(currentPCB->flags & PROCESS_STATUS_YIELD){
+        ProcessSetStatus(currentPCB, PROCESS_STATUS_RUNNABLE);
+	  }else{
+        if(ClkGetCurJiffies() - pcb->numJiffies == 11){
+            currentPCB->estCPU++;
+            ProcessRecalcPriority(currentPCB);
+		}
+	  }
 
       queue_place = WhichQueue(currentPCB);
 
@@ -454,7 +456,7 @@ void ProcessSuspend (PCB *suspend) {
   dbprintf ('p', "ProcessSuspend (%d): function started\n", GetCurrentPid());
   ASSERT (suspend->flags & PROCESS_STATUS_RUNNABLE, "Trying to suspend a non-running process!\n");
   ProcessSetStatus (suspend, PROCESS_STATUS_WAITING);
-
+  suspend->sleepStart = ClkGetCurJiffies();
   if (AQueueRemove(&(suspend->l)) != QUEUE_SUCCESS) {
     printf("FATAL ERROR: could not remove process from run Queue in ProcessSuspend!\n");
     exitsim();
@@ -754,7 +756,11 @@ int ProcessFork (VoidFunc func, uint32 param, int pnice, int pinfo,char *name, i
   pcb->pinfo = pinfo;
   pcb->runTime = 0;
   
-  pcb->priority = BASE_PRIORITY;
+  if(func == ProcessIdle){
+      pcb->priority = 127;
+  }else{
+    pcb->priority = BASE_PRIORITY;
+  }
   
   pcb->sleepStart = 0;
   pcb->estCPU = 0;
@@ -1096,6 +1102,7 @@ void main (int argc, char *argv[])
     dbprintf('i', "No user program passed!\n");
   }
 
+  idle = &pcbs[ProcessFork(&ProcessIdle, 0, 0, 0, (char *)"Idle", 0)];
   // Start the clock which will in turn trigger periodic ProcessSchedule's
   ClkStart();
 
@@ -1173,6 +1180,9 @@ int GetPidFromAddress(PCB *pcb) {
 //--------------------------------------------------------
 void ProcessUserSleep(int seconds) {
   // Your code here
+  ProcessSuspend(currentPCB);
+  ProcessSetStatus(currentPCB, PROCESS_TYPE_WAKE);
+  currentPCB->wakeTime = ClkGetCurJiffies() + seconds * (1000000 / ClkGetResolution());
 }
 
 //-----------------------------------------------------
@@ -1181,5 +1191,10 @@ void ProcessUserSleep(int seconds) {
 // ProcessSchedule (in traps.c).
 //-----------------------------------------------------
 void ProcessYield() {
-  // Your code here
+  ProcessSetStatus(currentPCB, PROCESS_STATUS_YIELD);
 }
+static void ProcessIdle(){
+    while(1);
+    return;
+}
+Process

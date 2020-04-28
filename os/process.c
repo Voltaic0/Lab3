@@ -260,7 +260,7 @@ void ProcessSchedule () {
       if(!AQueueEmpty(&runQueue[i])){
           currentlyRun = 0;
           if(i == 31 && AQueueLength(&runQueue[i]) == 1){
-            currentRun = 1;
+            currentlyRun = 1;
 		  }
           break;
       }
@@ -277,7 +277,7 @@ void ProcessSchedule () {
   }
 
   // Move the front of the queue to the end.  The running process was the one in front.
-  currentPCB->runTime = currentPCB->runtTime + ClkGetCurJiffies() - currentPCB->numJiffies;
+  currentPCB->runTime = currentPCB->runTime + ClkGetCurJiffies() - currentPCB->numJiffies;
 
   //AQueueMoveAfter(&runQueue[queue_place], AQueueLast(&runQueue[queue_place]), AQueueFirst(&runQueue[queue_place]));
   //printf("AQueueMove processSchedule\n");
@@ -306,7 +306,7 @@ void ProcessSchedule () {
   
   pcb = ProcessFindHighestPriorityPCB();
 
-  if(currenPCB = pcb){
+  if(currentPCB = pcb){
       AQueueRemove(&currenPCB->l);
       queue_place = WhichQueue(currenPCB);
       currentPCB->l = AQueueAllocLink(currentPCB);
@@ -347,7 +347,7 @@ PCB *ProcessFindHighestPriorityPCB(){
     for(i = 0; i< 32; i++){
      if(!AQueueEmpty(&runQueue[i])){
       pcb = (PCB *)AQueueObject(AQueueFirst(&runQueue[i]));
-      if(pcb = idle && AQueueLength(&runQueue[i]!=1){
+      if(pcb == idle && AQueueLength(&runQueue[i]!=1)){
        AQueueMoveAfter(&runQueue[i], AQueueLast(&runQueue[i]), AQueueFirst(&runQueue[i]));
        i-=1;
        continue;  //Go back into the loop and grab the non idle pcb

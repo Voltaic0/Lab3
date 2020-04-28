@@ -234,16 +234,12 @@ void ProcessSchedule () {
 
   //Cheching for auto waking processes used in Q5
   while(l != NULL){
-    pcb = AQueueObject(&waitQueue);
+    pcb = AQueueObject(l);
     l= AQueueNext(l);
 
     if(pcb->flags & PROCESS_TYPE_WAKE){
         autoWake = 0;
         if(pcb->wakeTime <= ClkGetCurJiffies()){
-            ProcessWakeup(pcb);  
-		}
-            ProcessWakeup(pcb);  
-		}
             ProcessWakeup(pcb);  
 		}
 	}

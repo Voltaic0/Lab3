@@ -45,7 +45,9 @@ static PCB	pcbs[PROCESS_MAX_PROCS];
 // String listing debugging options to print out.
 char	debugstr[200];
 
-static int times;
+PCB *idle; //Easy pointing a pcb that is idle
+
+static int times = 0;
 
 int ProcessGetCodeInfo(const char *file, uint32 *startAddr, uint32 *codeStart, uint32 *codeSize,
                        uint32 *dataStart, uint32 *dataSize);
@@ -209,9 +211,10 @@ void ProcessSetResult (PCB * pcb, uint32 result) {
 void ProcessSchedule () {
   PCB *pcb=NULL;
   int i=0;
-  //Link *l=NULL;
+  Link *l=NULL;
   int queue_place;
-  //int autoWake = 1;
+  int autoWake = 1;
+  int currentlyRun = 1;
 
 //  if(AQueueEmpty(&waitQueue)){
 //      autoWake = 0;
@@ -239,52 +242,85 @@ void ProcessSchedule () {
   // bug.  An easy solution to allowing no runnable "user" processes is to
   // have an "idle" process that's simply an infinite loop.
 
+  //Check to autowake Processes
+  l = AQueueFirst(&waitQueue);
+
+  //Cheching for auto waking processes used in Q5
+  /*while(l != NULL){
+    pcb = AQueueObject(&waitQueue);
+    l= AQueueNext(l);
+
+    if(pcb->flags & PROCESS_TYPE_WAKE){
+        autoWake = 0;
+        if(pcb->)
+	}
+  }
+  */
   for(i = 0; i < 32; i++){
       if(!AQueueEmpty(&runQueue[i])){
-          printf("Empty Queue\n");
+          currentlyRun = 0;
+          if(i == 31 && AQueueLength(&runQueue[i]) == 1){
+            currentRun = 1;
+		  }
           break;
       }
   }
   printf("i = %d\n", i);
   
   //printf("finished that loop\n");
-  if(i == 32){
+  if(currentRun && autoWake){
       if(AQueueLength(&waitQueue)) {
-          printf("NO Runnable Processes, FATAL ERROR!\n");
+          printf("NO Runnable Processes or Auto waking process, but there are processes waiting. FATAL ERROR!\n");
       }
       printf("No Runnable Processes!\n");
       exitsim();
   }
 
   // Move the front of the queue to the end.  The running process was the one in front.
-  currentPCB->estCPU = ClkGetCurJiffies() - currentPCB->numJiffies;
-  pcb->runTime += ClkGetCurJiffies()-currentPCB->numJiffies;
-  ProcessRecalcPriority(currentPCB);
+  currentPCB->runTime = currentPCB->runtTime + ClkGetCurJiffies() - currentPCB->numJiffies;
 
-  AQueueMoveAfter(&runQueue[queue_place], AQueueLast(&runQueue[queue_place]), AQueueFirst(&runQueue[queue_place]));
+  //AQueueMoveAfter(&runQueue[queue_place], AQueueLast(&runQueue[queue_place]), AQueueFirst(&runQueue[queue_place]));
   //printf("AQueueMove processSchedule\n");
   //Print process info
   if(currentPCB->pinfo == 1){
-      printf(PROCESS_CPUSTATS_FORMAT, GetCurrentPid(), ClkGetCurJiffies() - currentPCB->numJiffies, 0);
+      printf(PROCESS_CPUSTATS_FORMAT, GetCurrentPid(), currentPCB->runTime, currentPCB->priority);
   }
 
+  if(currentPCB->flags & PROCESS_STATUS_RUNNABLE){
+      AQueueRemove(&(currentPCB->l));
+
+      queue_place = WhichQueue(currentPCB);
+
+      currentPCB->l = AQueueAllocLink(currentPCB);
+
+      AQueueInsertLast(&runQueue[queue_place], currentPCB->l);
+ 
+  }
+  
   times++;
+
   if(times == 10){
       times = 0;
-      printf("decaying\n");
       ProcessDecayAllEstcpus();
   }
+  
+  pcb = ProcessFindHighestPriorityPCB();
 
+  if(currenPCB = pcb){
+      AQueueRemove(&currenPCB->l);
+      queue_place = WhichQueue(currenPCB);
+      currentPCB->l = AQueueAllocLink(currentPCB);
+      AQueueInsertLast(&runQueue[queue_place], currentPCB->l);
+      pcb = ProcessFindHighestPriorityPCB();
+  }
 
-
-  // Now, run the one at the head of the queue.
-  pcb = (PCB *)AQueueObject(AQueueFirst(&runQueue[i]));
   currentPCB = pcb;
-  ProcessRecalcPriority(currentPCB);
+
+  pcb->numJiffies = GetClkCurJiffies();
+
   dbprintf ('p',"About to switch to PCB 0x%x,flags=0x%x @ 0x%x\n",
 	    (int)pcb, pcb->flags, (int)(pcb->sysStackPtr[PROCESS_STACK_IAR]));
 
-  currentPCB->numJiffies = ClkGetCurJiffies();
 
   // Clean up zombie processes here.  This is done at interrupt time
   // because it can't be done while the process might still be running
@@ -304,6 +340,23 @@ void ProcessSchedule () {
 
 
 //USER GENERATED HELPER FUNCTIONS
+PCB *ProcessFindHighestPriorityPCB(){
+    PCB *pcb;
+    int i;
+
+    for(i = 0; i< 32; i++){
+     if(!AQueueEmpty(&runQueue[i])){
+      pcb = (PCB *)AQueueObject(AQueueFirst(&runQueue[i]));
+      if(pcb = idle && AQueueLength(&runQueue[i]!=1){
+       AQueueMoveAfter(&runQueue[i], AQueueLast(&runQueue[i]), AQueueFirst(&runQueue[i]));
+       i-=1;
+       continue;  //Go back into the loop and grab the non idle pcb
+	  }
+      break;
+	 }
+	}
+    return pcb;
+}
 void ProcessDecayAllEstcpus(){
     int i;
     int j;
@@ -341,27 +394,31 @@ void ProcessDecayAllEstcpus(){
 }
 
 void ProcessRecalcPriority(PCB *pcb){
+    if(pcb == idle){
+     pcb->priority = 127;
+     return;
+	}
     //int totalJiffies = 0;
     //int i;
-
-    if(ClkGetCurJiffies() - pcb->numJiffies >= PROCESS_QUANTUM_JIFFIES){pcb->estCPU++;}
     pcb->priority = BASE_PRIORITY + pcb->estCPU / 4 + 2* pcb->pnice;
 
     if(pcb->priority > 127){
         pcb->priority = 127;
     }
-
+    return;
 }
 
 void ProcessDecayEstcpuSleep(PCB *pcb, int time_asleep_jiffies){
     int num_windows_asleep;
     int i;
     if(time_asleep_jiffies >= 10 * PROCESS_QUANTUM_JIFFIES){
-        num_windows_asleep = time_asleep_jiffies / (0.01*10);
+        num_windows_asleep = time_asleep_jiffies / (100);
         for(i = 0; i < num_windows_asleep; i++){
             pcb->estCPU = pcb->estCPU * (2.0 / 3.0);
         }
     }
+    ProcessRecalcPriority(pcb);
+    return;
 }
 
 //----------------------------------------------------------------------

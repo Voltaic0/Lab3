@@ -48,13 +48,13 @@ typedef struct PCB {
   int           pnice;          // Used in priority calculation
 
   int   numJiffies; // Number of Jiffies when Process began on CPU
-  int runTime;
-  int sleepStart;
+  int runTime;      //How long the Process has run on pcb so far
+  int sleepStart;   //Start time of Jiffie run
 
-  int decayed;
+  int decayed;      //decay flag
 
-  int priority;
-  double estCPU;
+  int priority;     //Number 0-127 signifying priority and runQueue location
+  double estCPU;    //time spent running on the cpu
 } PCB;
 
 // Offsets of various registers from the stack pointer in the register
@@ -100,6 +100,8 @@ extern void     ProcessDestroy(PCB *pcb);
 extern unsigned GetCurrentPid();
 void process_create(char *name, ...);
 int GetPidFromAddress(PCB *pcb);
+
+PCB *ProcessFindHighestPriorityPCB();
 
 void ProcessUserSleep(int seconds);
 void ProcessYield();

@@ -268,7 +268,7 @@ void ProcessSchedule () {
   printf("i = %d\n", i);
   
   //printf("finished that loop\n");
-  if(currentRun && autoWake){
+  if(currentlyRun && autoWake){
       if(AQueueLength(&waitQueue)) {
           printf("NO Runnable Processes or Auto waking process, but there are processes waiting. FATAL ERROR!\n");
       }
@@ -306,9 +306,9 @@ void ProcessSchedule () {
   
   pcb = ProcessFindHighestPriorityPCB();
 
-  if(currentPCB = pcb){
-      AQueueRemove(&currenPCB->l);
-      queue_place = WhichQueue(currenPCB);
+  if(currentPCB == pcb){
+      AQueueRemove(&currentPCB->l);
+      queue_place = WhichQueue(currentPCB);
       currentPCB->l = AQueueAllocLink(currentPCB);
       AQueueInsertLast(&runQueue[queue_place], currentPCB->l);
       pcb = ProcessFindHighestPriorityPCB();
@@ -316,7 +316,7 @@ void ProcessSchedule () {
 
   currentPCB = pcb;
 
-  pcb->numJiffies = GetClkCurJiffies();
+  pcb->numJiffies = ClkGetCurJiffies();
 
   dbprintf ('p',"About to switch to PCB 0x%x,flags=0x%x @ 0x%x\n",
 	    (int)pcb, pcb->flags, (int)(pcb->sysStackPtr[PROCESS_STACK_IAR]));
@@ -347,7 +347,7 @@ PCB *ProcessFindHighestPriorityPCB(){
     for(i = 0; i< 32; i++){
      if(!AQueueEmpty(&runQueue[i])){
       pcb = (PCB *)AQueueObject(AQueueFirst(&runQueue[i]));
-      if(pcb == idle && AQueueLength(&runQueue[i]!=1)){
+      if(pcb == idle && AQueueLength(&runQueue[i])!= 1){
        AQueueMoveAfter(&runQueue[i], AQueueLast(&runQueue[i]), AQueueFirst(&runQueue[i]));
        i-=1;
        continue;  //Go back into the loop and grab the non idle pcb

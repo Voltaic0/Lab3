@@ -241,9 +241,8 @@ void ProcessSchedule () {
 
   for(i = 0; i < 32; i++){
       if(!AQueueEmpty(&runQueue[i])){
-          break;
-          printf("printing?\n");
           printf("Empty Queue\n");
+          break;
       }
   }
   printf("i = %d\n", i);

@@ -48,6 +48,7 @@ char	debugstr[200];
 PCB *idle; //Easy pointing a pcb that is idle
 
 static int times = 0;
+static void ProcessIdle();
 
 int ProcessGetCodeInfo(const char *file, uint32 *startAddr, uint32 *codeStart, uint32 *codeSize,
                        uint32 *dataStart, uint32 *dataSize);

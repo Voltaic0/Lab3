@@ -271,6 +271,7 @@ void ProcessSchedule () {
   times++;
   if(times == 10){
       times = 0;
+      printf("decaying\n");
       ProcessDecayAllEstcpus();
   }
 

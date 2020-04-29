@@ -29,8 +29,8 @@
 #define	PROCESS_STATUS_MASK	0x3f
 #define	PROCESS_TYPE_SYSTEM	0x100
 #define	PROCESS_TYPE_USER	0x200
-#define PROCESS_TYPE_WAKE   0x40
-#define PROCESS_STATUS_YIELD 0x20
+#define PROCESS_TYPE_WAKE   0x40 //Assure no overlap of mask
+#define PROCESS_STATUS_YIELD 0x20   //Flag to see if a process is yielding
 
 typedef	void (*VoidFunc)();
 

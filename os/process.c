@@ -126,7 +126,7 @@ void ProcessFreeResources (PCB *pcb) {
   int npages = 0;
 
   dbprintf ('p', "ProcessFreeResources: function started\n");
-  printf("in ProcessFreeResources\n");
+  //printf("in ProcessFreeResources\n");
 
 
   //-----------------------------------------------------

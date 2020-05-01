@@ -1,6 +1,5 @@
 # Lab3
-To test the mailboxes and q2 begin by modifying the makefile in apps/q2/ to specify the number of S2 and CO molecules that need to be 
-injected. After run make in the OS folder and then run make in apps/q2 then make run to test the code
+To test the mailboxes and q2 begin by modifying the makefile in apps/q2/ to specify the number of S2 and CO molecules, currently set at 2 and 8 that need to be injected. After run make in the OS folder and then make in apps/q2 then make run to test the code
 
 Q3 can be checked by modifying the The makeprocs.c file in apps/q2/makeprocs and changing the second zero in the lines calling 
 process_create to 1. This was done for the S2 inject process_create in Q1 to show the functionality of it.
